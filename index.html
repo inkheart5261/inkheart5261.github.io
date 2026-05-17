@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jintong Yang — Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --text: #1a1a1a;
+            --text-muted: #888;
+            --text-faint: #bbb;
+            --bg: #fafaf7;
+            --accent: #d9410e;
+            --border: #e8e6e0;
+            --highlight: #fff8d4;
+            --hover-bg: #f0ede5;
+            --active-bg: #e8e3d3;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-size: 14px;
+            line-height: 1.55;
+            color: var(--text);
+            background: var(--bg);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container { display: flex; min-height: 100vh; }
+
+        /* ===== 左侧 Sidebar（加宽） ===== */
+        .sidebar {
+            width: 44%;              /* 38% → 44% */
+            max-width: 580px;        /* 520 → 580 */
+            padding: 48px 52px;
+            position: fixed;
+            top: 0; left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+        }
+
+        .sidebar::-webkit-scrollbar { width: 0; }
+
+        .label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 500;
+        }
+
+        h1 {
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1.05;
+            margin-bottom: 8px;
+            letter-spacing: -1.5px;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 28px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 500;
+        }
+
+        .bio {
+            color: #555;
+            margin-bottom: 24px;
+            font-size: 14px;
+            line-height: 1.65;
+        }
+
+        .bio .highlight {
+            background: var(--highlight);
+            padding: 0 3px;
+        }
+
+        .links {
+            display: flex;
+            gap: 18px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
+        .links a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            position: relative;
+        }
+
+        .links a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px; left: 0;
+            width: 100%; height: 1px;
+            background: var(--accent);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .links a:hover::after { transform: scaleX(1); }
+
+        .divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 0 0 20px;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 500;
+            margin-bottom: 8px;
+            padding-left: 16px;
+        }
+
+        .project-list {
+            list-style: none;
+        }
+
+        .project-list li {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            margin-bottom: 2px;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 15px;
+            color: var(--text);
+        }
+
+        .project-list li:hover {
+            background: var(--hover-bg);
+        }
+
+        .project-list li.active {
+            background: var(--active-bg);
+            font-weight: 500;
+        }
+
+        .project-list .icon {
+            margin-right: 12px;
+            font-size: 14px;
+            color: var(--text-muted);
+            min-width: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .project-list li.active .icon {
+            color: var(--accent);
+        }
+
+        .project-list .name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 32px;
+        }
+
+        .copyright {
+            font-size: 11px;
+            color: var(--text-faint);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 500;
+        }
+
+        /* ===== 右侧主内容 ===== */
+        .main {
+            margin-left: 44%;     /* 38% → 44% */
+            width: 56%;            /* 62% → 56% */
+            padding: 48px 56px 80px;
+            min-height: 100vh;
+        }
+
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 36px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .main-header h2 {
+            font-size: 30px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .count {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 500;
+        }
+
+        .preview {
+            background: #ececea;
+            aspect-ratio: 16 / 10;
+            margin-bottom: 28px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview img,
+        .preview video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .preview-placeholder {
+            font-size: 13px;
+            color: var(--text-faint);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 500;
+        }
+
+        .preview-info h3 {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            letter-spacing: -0.4px;
+            line-height: 1.2;
+        }
+
+        .preview-info .meta {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 18px;
+            font-weight: 500;
+        }
+
+        .preview-info .description {
+            color: #555;
+            font-size: 14.5px;
+            line-height: 1.65;
+            margin-bottom: 22px;
+            max-width: 680px;
+        }
+
+        .preview-info .view-project {
+            display: inline-flex;
+            align-items: center;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            position: relative;
+        }
+
+        .preview-info .view-project::after {
+            content: '';
+            position: absolute;
+            bottom: -2px; left: 0;
+            width: 100%; height: 1px;
+            background: var(--accent);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .preview-info .view-project:hover::after { transform: scaleX(1); }
+
+        .preview-info .view-project .arrow { margin-left: 6px; }
+
+        .footer {
+            margin-top: 80px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 500;
+        }
+
+        .footer span:first-child {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .footer span:first-child:hover { color: var(--accent); }
+
+        @media (max-width: 900px) {
+            .container { flex-direction: column; }
+            .sidebar {
+                position: relative;
+                width: 100%;
+                max-width: none;
+                height: auto;
+                padding: 32px 24px;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+            h1 { font-size: 38px; }
+            .main {
+                margin-left: 0;
+                width: 100%;
+                padding: 32px 24px 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <aside class="sidebar">
+            <div class="label">Portfolio · 2026</div>
+
+            <h1>Jintong Yang</h1>
+            <div class="subtitle">Artist & Researcher</div>
+
+            <p class="bio">
+                Multidisciplinary artist and researcher working at the intersection of <span class="highlight">creative support tools</span>, human–computer interaction, and tangible media. I bridge digital and physical processes to extend creative workflows across animation, motion graphics, VR/AR, and live performance.
+            </p>
+
+            <div class="links">
+                <a href="mailto:jintongyang@ucsb.edu">Email ↗</a>
+                <a href="cv.html">CV ↗</a>
+                <a href="https://instagram.com/" target="_blank">Instagram ↗</a>
+            </div>
+
+            <hr class="divider">
+
+            <div class="nav-label">Projects</div>
+            <ul class="project-list" id="projectList">
+                <li class="active" data-id="ideascape">
+                    <span class="icon">▢</span>
+                    <span class="name">IdeaScape</span>
+                </li>
+                <li data-id="dear-lord">
+                    <span class="icon">▢</span>
+                    <span class="name">Dear Lord, Make Me Beautiful</span>
+                </li>
+                <li data-id="rasa">
+                    <span class="icon">▢</span>
+                    <span class="name">The RASA Project</span>
+                </li>
+                <li data-id="motion-control">
+                    <span class="icon">▢</span>
+                    <span class="name">Creative Motion Control</span>
+                </li>
+                <li data-id="chrysalis">
+                    <span class="icon">▢</span>
+                    <span class="name">Chrysalis</span>
+                </li>
+                <li data-id="fragment">
+                    <span class="icon">▢</span>
+                    <span class="name">Fragment of Nature</span>
+                </li>
+                <li data-id="nightn">
+                    <span class="icon">▢</span>
+                    <span class="name">NightN-ARTTech Light Show</span>
+                </li>
+                <li data-id="peo">
+                    <span class="icon">▢</span>
+                    <span class="name">Peo-Tapestry</span>
+                </li>
+                <li data-id="other">
+                    <span class="icon">▢</span>
+                    <span class="name">Other Works</span>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <div class="copyright">© 2026 Jintong Yang · All works reserved</div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="main-header">
+                <h2>Projects</h2>
+                <span class="count">9 Works</span>
+            </div>
+
+            <div class="preview" id="previewMedia">
+                <span class="preview-placeholder">IdeaScape</span>
+            </div>
+
+            <div class="preview-info" id="previewInfo">
+                <h3>IdeaScape</h3>
+                <div class="meta">Creative Support Tool · 2025</div>
+                <p class="description">A spatial ideation environment exploring how generative AI can support divergent thinking in early-stage creative practice. Currently in development as part of ongoing PhD research.</p>
+                <a href="projects/ideascape.html" class="view-project">View project<span class="arrow">→</span></a>
+            </div>
+
+            <div class="footer">
+                <span onclick="window.scrollTo({top:0,behavior:'smooth'})">↑ Back to top</span>
+                <span>Last updated · May 2026</span>
+            </div>
+        </main>
+
+    </div>
+
+    <script>
+        const projects = {
+            'ideascape': {
+                title: 'IdeaScape',
+                meta: 'Creative Support Tool · 2025',
+                description: 'A spatial ideation environment exploring how generative AI can support divergent thinking in early-stage creative practice. Currently in development as part of ongoing PhD research.',
+                media: null
+            },
+            'dear-lord': {
+                title: 'Dear Lord, Make Me Beautiful',
+                meta: 'Installation · Park Avenue Armory · 2024',
+                description: 'Visual and interaction design contribution to a large-scale immersive performance installation at Park Avenue Armory, NYC.',
+                media: null
+            },
+            'rasa': {
+                title: 'The RASA Project',
+                meta: 'Research · 2024',
+                description: 'Investigation into multimodal authoring tools that map emotional rasas to visual and sonic outputs.',
+                media: null
+            },
+            'motion-control': {
+                title: 'Creative Motion Control',
+                meta: 'Tool · 2024',
+                description: 'A motion control system for live performance, combining hand tracking with custom mapping interfaces.',
+                media: null
+            },
+            'chrysalis': {
+                title: 'Chrysalis',
+                meta: 'Animation · 2023',
+                description: 'A short experimental animation exploring transformation, identity, and the in-between.',
+                media: null
+            },
+            'fragment': {
+                title: 'Fragment of Nature',
+                meta: 'Installation · 2023',
+                description: 'A generative installation translating natural processes into algorithmic visual systems.',
+                media: null
+            },
+            'nightn': {
+                title: 'NightN-ARTTech Light Show',
+                meta: 'Live Visual · 2023',
+                description: 'Real-time light and visual performance designed for nighttime gallery exhibition.',
+                media: null
+            },
+            'peo': {
+                title: 'Peo-Tapestry',
+                meta: 'MFA Thesis · 2023',
+                description: 'A textile-inspired digital tapestry weaving cultural heritage with computational image-making.',
+                media: null
+            },
+            'other': {
+                title: 'Other Works',
+                meta: 'Selected works · 2020–',
+                description: 'A collection of motion graphics, commercial work, and experimental sketches.',
+                media: null
+            }
+        };
+
+        const listItems = document.querySelectorAll('.project-list li');
+        const previewMedia = document.getElementById('previewMedia');
+        const previewInfo = document.getElementById('previewInfo');
+
+        function updatePreview(id) {
+            const p = projects[id];
+            if (!p) return;
+
+            if (p.media) {
+                previewMedia.innerHTML = `<img src="${p.media}" alt="${p.title}">`;
+            } else {
+                previewMedia.innerHTML = `<span class="preview-placeholder">${p.title}</span>`;
+            }
+
+            previewInfo.innerHTML = `
+                <h3>${p.title}</h3>
+                <div class="meta">${p.meta}</div>
+                <p class="description">${p.description}</p>
+                <a href="projects/${id}.html" class="view-project">View project<span class="arrow">→</span></a>
+            `;
+        }
+
+        listItems.forEach(li => {
+            li.addEventListener('click', () => {
+                listItems.forEach(x => x.classList.remove('active'));
+                li.classList.add('active');
+                updatePreview(li.dataset.id);
+            });
+        });
+    </script>
+</body>
+</html>
