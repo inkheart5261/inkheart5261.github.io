@@ -287,7 +287,7 @@ const WORKS = [
            {label:'Source Code · GitHub', url:'https://github.com/Creative-Motion-Control-Course/Team-Cook'}],
     captions:['System overview','Drawing','Paper embroidery'] },
 
-  { key:'chrysalis', title:'Chrysalis', short:'Chrysalis', year:'2023', type:'Art', cat:'Immersion', look:'door',
+  { key:'chrysalis', title:'Chrysalis', short:'Chrysalis', year:'2023', type:'Research', also:['Art'], cat:'Immersion', look:'door',
     medium:'Multimedia Installation · Digital Fabrication · MFA Thesis', role:'Independent Artist',
     venue:'SVA Chelsea Gallery; Romanian Cultural Institute, New York',
     tools:'TouchDesigner, Cinema 4D, Arduino, Kinect, Stable Diffusion, Adobe Suite', collab:'',
@@ -325,13 +325,6 @@ const WORKS = [
     desc:['A creative support tool and UI/UX research project.','Full project text coming soon.'],
     links:[{label:'Live Prototype', url:'https://cs185-gr6.onrender.com'}],
     captions:['Interface','User study','Prototype'] },
-
-  { key:'fragments-of-nature', title:'Fragments of Nature', short:'Fragments of Nature', year:'2024', type:'Art', cat:'Moving Image', look:'terrain',
-    medium:'Experimental Visuals · 3D Scanning · Point Cloud', role:'', venue:'', tools:'3D Scanning, TouchDesigner', collab:'',
-    logline:'Scanned trees, plants and flowers, re-rendered as evolving point-cloud paintings.',
-    desc:['Fragments of Nature is a series of experimental digital paintings that begin with 3D-scanned natural elements and end as evolving point-cloud compositions. Bringing the scans into TouchDesigner and treating each one as raw material rather than a finished model, I explored how organic forms can be re-rendered, distorted and recomposed through real-time visual programming, while traces of the original specimen stay visible.',
-          'The series asks what new visual vocabularies open up when the captured natural world is treated as a flexible, computational image rather than a fixed digital twin, somewhere between photography, drawing and generative art.'],
-    links:[], captions:['Final experimental paintings','3D scanning in four perspectives','Programming in TouchDesigner'] },
 
   { key:'peo-tapestry', title:'Peo-Tapestry', short:'Peo-Tapestry', year:'2024–25', type:'Art', cat:'Moving Image', look:'gold',
     medium:'Poetry Visualization · Virtual Environment', role:'3D Audiovisual Artist',
@@ -389,9 +382,28 @@ const WORKS = [
           'The work explores how sound and image can lead each other, and how everyday city material becomes a personal map of two places. Urban Aquarium, originally titled Dreams in NYC, was selected for Personaland\u2019s \u201cPersonal Archeology\u201d show.'],
     links:[{label:'Exhibition · Personal Archeology', url:'https://personaland.com/hut/exhibition/personal-archeology'}],
     captions:['Urban Aquarium','Steam Wave','Ridiculous? Hilarious?'] },
+  { key:'fragments-of-nature', title:'Fragments of Nature', short:'Fragments of Nature', year:'2024', type:'Art', cat:'Moving Image', look:'terrain',
+    medium:'Experimental Visuals · 3D Scanning · Point Cloud', role:'', venue:'', tools:'3D Scanning, TouchDesigner', collab:'',
+    logline:'Scanned trees, plants and flowers, re-rendered as evolving point-cloud paintings.',
+    desc:['Fragments of Nature is a series of experimental digital paintings that begin with 3D-scanned natural elements and end as evolving point-cloud compositions. Bringing the scans into TouchDesigner and treating each one as raw material rather than a finished model, I explored how organic forms can be re-rendered, distorted and recomposed through real-time visual programming, while traces of the original specimen stay visible.',
+          'The series asks what new visual vocabularies open up when the captured natural world is treated as a flexible, computational image rather than a fixed digital twin, somewhere between photography, drawing and generative art.'],
+    links:[], captions:['Final experimental paintings','3D scanning in four perspectives','Programming in TouchDesigner'] },
 ];
-const N = WORKS.length;
-const FILTERS = ['All','','Research','Art','','Interface','Performance','Immersion','Installation','Moving Image'];
+/* INDEPENDENT WORKS: animated shorts, drawings, studies. They appear only in the
+   "Independent Works" grid (and their own pages), never on the spiral. Add more here. */
+const INDEPENDENT = [
+  { key:'animations', title:'Motion Graphics & Animations', year:'2020–24', type:'Independent', cat:'Moving Image', look:'aurora',
+    medium:'Animated Short · Motion Graphics', logline:'', desc:['Independent animated shorts and motion studies. Text coming soon.'], links:[], captions:['Still','Still','Still'] },
+  { key:'creative-programming', title:'Creative Programming', year:'2021–24', type:'Independent', cat:'Moving Image', look:'moire',
+    medium:'Generative Visuals · Creative Coding', logline:'', desc:['Generative and real-time visual studies. Text coming soon.'], links:[], captions:['Still','Still','Still'] },
+  { key:'drawings', title:'Hand Drawings & Collages', year:'2020–24', type:'Independent', cat:'Image', look:'rose',
+    medium:'Drawing · Collage', logline:'', desc:['Drawings and collages. Text coming soon.'], links:[], captions:['Drawing','Collage','Drawing'] },
+];
+const N = WORKS.length;                 // works on the spiral
+WORKS.push(...INDEPENDENT);              // independent works live after them
+const isSolo=i=>i>=N;
+const FILTERS = ['All','','Research','Art','Independent','','Interface','Performance','Immersion','Installation','Moving Image'];
+const FILTER_LABEL = { Art:'Art Projects', Independent:'Independent Works' };
 
 /* Selected exhibitions & performances, newest first. The first one also shows top right as LATEST. */
 const EVENTS = [
@@ -492,11 +504,14 @@ function makeTexture(look, seed){
   const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=MAXANI; return t;
 }
 function labelTexture(w,i){
-  const W=1024,H=72,c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
-  x.font='400 26px "JetBrains Mono", monospace'; x.fillStyle='#ff5a2a'; x.fillText(`N°${String(i+1).padStart(2,'0')}`,4,46);
-  x.fillStyle='rgba(242,241,238,.92)'; x.font='300 30px Inter, sans-serif'; x.fillText(w.short||w.title,104,47);
-  x.font='400 20px "JetBrains Mono", monospace'; x.fillStyle='rgba(242,241,238,.5)';
-  const tag=`${w.type} / ${w.cat}${w.year?'  ·  '+w.year:''}`.toUpperCase(); x.fillText(tag, W-6-x.measureText(tag).width, 45);
+  const W=1024,H=270,c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
+  x.font='400 40px "JetBrains Mono", monospace'; x.fillStyle='#ff5a2a'; x.fillText(i>=N?'IND.':`N°${String(i+1).padStart(2,'0')}`,4,60);
+  x.font='400 34px "JetBrains Mono", monospace'; x.fillStyle='rgba(242,241,238,.6)';
+  const tag=`${w.cat}${w.year?'  ·  '+w.year:''}`.toUpperCase(); x.fillText(tag, W-6-x.measureText(tag).width, 58);
+  x.fillStyle='rgba(242,241,238,.96)'; x.font='300 64px Inter, sans-serif';
+  const words=w.title.split(' '), lines=['']; words.forEach(wd=>{ const t=(lines[lines.length-1]+' '+wd).trim(); if(x.measureText(t).width>W-10 && lines[lines.length-1]) lines.push(wd); else lines[lines.length-1]=t; });
+  if(lines.length>2){ lines.length=2; while(x.measureText(lines[1]+'\u2026').width>W-10) lines[1]=lines[1].slice(0,-1); lines[1]=lines[1].trim()+'\u2026'; }
+  lines.forEach((l,k)=>x.fillText(l,2,148+k*76));
   const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=MAXANI; return t;
 }
 
@@ -701,8 +716,8 @@ const galleryOf=(w,i)=>(w.images&&w.images[i])||`img/${w.key}/${i+1}.jpg`;
 WORKS.forEach((w,i)=>{ new THREE.TextureLoader().load(coverOf(w), t=>{ t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=MAXANI; assets[i].tex=t; assets[i].real=true; screens.forEach(s=>{ if(s.wi===i) s.setTex(t); }); }, undefined, ()=>{}); });
 
 const geo = new THREE.PlaneGeometry(PW+PAD, PH+PAD, 48, 32);
-function buildScreen(copy){
-  const wi=copy%N, A=assets[wi], r=rng(copy*13+7), seed=r()*10;
+function buildScreen(copy,forced){
+  const wi=forced!==undefined?forced:copy%N, A=assets[wi], r=rng(copy*13+7), seed=r()*10;
   const g=new THREE.Group();
   const mk=(echo,tint)=>new THREE.ShaderMaterial({ vertexShader:panelVS, fragmentShader:panelFS, transparent:true, depthWrite:false,
     blending: echo?THREE.AdditiveBlending:THREE.NormalBlending, side:THREE.DoubleSide,
@@ -718,7 +733,7 @@ function buildScreen(copy){
   const rays=new THREE.LineSegments(rayGeo, streakMat); rays.frustumCulled=false; rays.renderOrder=1; scene.add(rays);
   const main=new THREE.Mesh(geo, mk(0)); main.renderOrder=2; g.add(main);
   const lm=new THREE.MeshBasicMaterial({ transparent:true, depthWrite:false, toneMapped:false });
-  const label=new THREE.Mesh(new THREE.PlaneGeometry(PW,PW*72/1024), lm); label.position.set(0,-PH/2-.42,.05); g.add(label);
+  const label=new THREE.Mesh(new THREE.PlaneGeometry(PW,PW*270/1024), lm); label.position.set(0,-PH/2-1.1,.05); g.add(label);
   scene.add(g);
   const s={ g, main, echoes, aura, auraMat, streakMat, rays, label, lm, wi, copy, fade:0, tilt:(r()-.5)*.09, flick:0, rel:0,
     layout:0, lt:0, ltAt:0, gpos:new THREE.Vector3(), inGrid:false,
@@ -726,6 +741,7 @@ function buildScreen(copy){
   main.userData.s=s; hitMeshes.push(main); screens.push(s);
 }
 for(let i=0;i<PERIOD;i++) buildScreen(i);
+for(let k=0;k<INDEPENDENT.length;k++){ buildScreen(PERIOD+k, N+k); screens[screens.length-1].solo=true; }
 
 { // a natural light source: a small hot centre inside a wide, exponentially fading halo (drawn analytically, no textures)
   const glowMat=(k,tint)=>new THREE.ShaderMaterial({ transparent:true, depthWrite:false, depthTest:false, blending:THREE.AdditiveBlending, fog:false,
@@ -779,7 +795,7 @@ let gridCat=null, gridList=[];
 let p=0, target=0, prevP=0, vel=0, detailOpen=false;
 let lastInput=performance.now(), lastAuto=performance.now();
 const mouse={x:0,y:0,sx:0,sy:0};
-const matchCat=(w,c)=>w.type===c||w.cat===c;
+const matchCat=(w,c)=>w.type===c||w.cat===c||(w.also||[]).includes(c);
 
 const sTitle=document.getElementById('sTitle'), sMeta=document.getElementById('sMeta'), sBar=document.getElementById('sBar'), hint=document.getElementById('hint');
 for(let i=0;i<N;i++) sBar.appendChild(document.createElement('i'));
@@ -790,7 +806,7 @@ function setStage(meta,title,key){
   sTitle.classList.remove('swap'); void sTitle.offsetWidth; sTitle.classList.add('swap');
 }
 function updateStage(){
-  if(mode==='grid'){ setStage(`<b>${gridCat.toUpperCase()}</b> &nbsp;·&nbsp; ${gridList.length} ${gridList.length===1?'WORK':'WORKS'}`, gridCat, 'g'+gridCat); return; }
+  if(mode==='grid'){ setStage(`<b>${(FILTER_LABEL[gridCat]||gridCat).toUpperCase()}</b> &nbsp;·&nbsp; ${gridList.length} ${gridList.length===1?'WORK':'WORKS'}`, FILTER_LABEL[gridCat]||gridCat, 'g'+gridCat); return; }
   const a=mod(Math.round(p),N), w=WORKS[a];
   setStage(`<b>N° ${String(a+1).padStart(2,'0')}</b> / ${String(N).padStart(2,'0')} &nbsp;·&nbsp; ${w.type} / ${w.cat}${w.year?' &nbsp;·&nbsp; '+w.year:''}`, w.title, 's'+a);
   [...sBar.children].forEach((b,i)=>b.classList.toggle('on',i===a));
@@ -803,7 +819,7 @@ const fWrap=document.getElementById('filters');
 const fButtons={};
 FILTERS.forEach(f=>{
   if(!f){ const s=document.createElement('span'); s.className='sep'; fWrap.appendChild(s); return; }
-  const b=document.createElement('button'); b.textContent=f; if(f==='All') b.classList.add('on');
+  const b=document.createElement('button'); b.textContent=FILTER_LABEL[f]||f; if(f==='All') b.classList.add('on');
   b.onclick=()=>{ if(f==='All'||f===gridCat) toSpiral(); else toGrid(f); };
   fWrap.appendChild(b); fButtons[f]=b;
 });
@@ -813,7 +829,8 @@ function toGrid(cat){
   if(mode==='about') return;
   const wasGrid=mode==='grid';
   mode='grid'; gridCat=cat; document.body.classList.add('grid'); markFilter(cat);
-  gridList=screens.filter(s=>s.copy<N && matchCat(WORKS[s.wi],cat));
+  const yr=w=>{ if(/ongoing/i.test(w.year)) return 9999; const m=String(w.year).match(/\d{2,4}/g)||['0']; let y=+m[m.length-1]; if(y<100) y+=2000; return y; };
+  gridList=screens.filter(s=>(s.copy<N||s.solo) && matchCat(WORKS[s.wi],cat)).sort((a,b)=>yr(WORKS[b.wi])-yr(WORKS[a.wi])||a.wi-b.wi); gridScroll=0;
   layoutGrid();
   const now=performance.now();
   screens.forEach(s=>{ const on=gridList.includes(s); s.inGrid=on; s.lt=on?1:0; s.ltAt=now+(on?gridList.indexOf(s)*70:0) + (wasGrid?0:0); });
@@ -828,19 +845,26 @@ function toSpiral(){
 }
 const G=new THREE.Vector3(0,1.0,R+1.5);
 let gridCam={ pos:new THREE.Vector3(), look:new THREE.Vector3() };
+let gridScroll=0, gridMax=0, gridBase=0;
 function layoutGrid(){
   const n=gridList.length, portrait=camera.aspect<1;
-  const cols = portrait ? Math.min(n,1) : (n<=3?n:(n===4?2:3));
-  const rows=Math.ceil(n/cols), gap=1.1, rgap=1.9;
+  const cols = portrait ? 1 : 4;              // always four per row, so cards keep one size as works are added
+  const rows=Math.ceil(n/cols), gap=1.2, rgap=3.5;
   const w=PW+PAD*.3, h=PH;
   gridList.forEach((s,j)=>{
     const row=Math.floor(j/cols), inRow=Math.min(cols,n-row*cols), col=j-row*cols;
-    s.gpos.set(G.x+(col-(inRow-1)/2)*(w+gap), G.y-(row-(rows-1)/2)*(h+rgap), G.z);
+    s.gpos.set(G.x+(col-(cols-1)/2)*(w+gap), G.y-row*(h+rgap), G.z);
   });
-  const gw=cols*w+(cols-1)*gap, gh=rows*h+(rows-1)*rgap+1.2, tanH=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
-  const dist=Math.max(gh*1.32/(2*tanH), gw*1.3/(2*tanH*camera.aspect), 9);
-  gridCam.pos.set(G.x+dist*.05, G.y-dist*.04, G.z+dist);
-  gridCam.look.set(G.x+dist*.05, G.y-dist*.04, G.z);
+  const tanH=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
+  const gw=cols*w+(cols-1)*gap, gh=rows*h+(rows-1)*rgap+1.4;
+  // fit four across (leaving room for the menu on the right); extra rows scroll
+  const dist=Math.max(gw*1.34/(2*tanH*camera.aspect), (h+2.2)*1.25/(2*tanH), 9);
+  const vh=2*dist*tanH;
+  const top=G.y+h/2+.6;                     // top edge of the first row (with breathing room)
+  gridBase=top-vh*.5+vh*.16; gridMax=Math.max(0,(gh+1.6)-vh*.78);   // always top-aligned; extra rows scroll
+  gridScroll=Math.min(gridScroll,gridMax);
+  gridCam.pos.set(G.x+dist*.06, gridBase, G.z+dist);
+  gridCam.look.set(G.x+dist*.06, gridBase, G.z);
 }
 
 /* ---------------- viewer ---------------- */
@@ -849,7 +873,7 @@ const slug=w=>'work-'+w.title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/
 let curWork=-1;
 function fillDetail(a){ const w=WORKS[a]; curWork=a; const $=id=>document.getElementById(id);
   const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  $('dCount').innerHTML=`<b>N° ${String(a+1).padStart(2,'0')}</b> / ${String(N).padStart(2,'0')}`;
+  $('dCount').innerHTML= isSolo(a) ? `<b>INDEPENDENT</b> ${String(a-N+1).padStart(2,'0')} / ${String(WORKS.length-N).padStart(2,'0')}` : `<b>N° ${String(a+1).padStart(2,'0')}</b> / ${String(N).padStart(2,'0')}`;
   $('dIdx').innerHTML=`<b>${w.type.toUpperCase()}</b> &nbsp;·&nbsp; ${w.cat.toUpperCase()} &nbsp;·&nbsp; ${esc(w.year)}`;
   $('dTitle').textContent=w.title; $('dSub').textContent=w.sub||''; $('dSub').style.display=w.sub?'':'none';
   $('dLog').textContent=w.logline||''; $('dLog').style.display=w.logline?'':'none';
@@ -869,14 +893,14 @@ function fillDetail(a){ const w=WORKS[a]; curWork=a; const $=id=>document.getEle
   const caps=(w.captions||[]).slice(1);
   $('dGallery').innerHTML=caps.map((c,i)=>`<figure class="${i===0?'full':''}"><div class="ph"><span>IMAGE ${i+1}</span><img src="${galleryOf(w,i)}" alt="${esc(c)}" onload="this.previousElementSibling.remove()" onerror="this.remove()"></div><figcaption>${esc(c)}</figcaption></figure>`).join('');
   $('dCredits').textContent=w.credits||''; $('dCredits').style.display=w.credits?'':'none';
-  const pv=mod(a-1,N), nx=mod(a+1,N);
+  const lo=isSolo(a)?N:0, sz=isSolo(a)?WORKS.length-N:N, pv=lo+mod(a-lo-1,sz), nx=lo+mod(a-lo+1,sz);
   $('dPrev').innerHTML=`<small>← PREVIOUS</small>${esc(WORKS[pv].title)}`; $('dPrev').onclick=e=>{ e.preventDefault(); openDetail(pv); };
   $('dNext').innerHTML=`<small>NEXT →</small>${esc(WORKS[nx].title)}`; $('dNext').onclick=e=>{ e.preventDefault(); openDetail(nx); };
   detail.scrollTop=0;
 }
 function openDetail(a){
   detailOpen=true; fillDetail(a); detail.classList.add('open'); detail.setAttribute('aria-hidden','false'); document.body.classList.add('detail');
-  if(mode==='spiral'){ target=Math.round(p)+((a-mod(Math.round(p),N)+N+N/2)%N-N/2); }   // spiral turns to this work behind the page
+  if(mode==='spiral'&&!isSolo(a)){ target=Math.round(p)+((a-mod(Math.round(p),N)+N+N/2)%N-N/2); }   // spiral turns to this work behind the page
   try{ if(location.hash!=='#'+slug(WORKS[a])) location.hash=slug(WORKS[a]); }catch(e){}
 }
 function closeDetail(){ detailOpen=false; detail.classList.remove('open'); document.body.classList.remove('detail'); detail.setAttribute('aria-hidden','true'); lastInput=performance.now();
@@ -931,14 +955,17 @@ document.getElementById('home').onclick=e=>{ e.preventDefault(); if(detailOpen) 
 
 /* ---------------- input ---------------- */
 let snapT=null; const snapSoon=()=>{ clearTimeout(snapT); snapT=setTimeout(()=>{ target=Math.round(target); },170); };
-addEventListener('wheel',e=>{ if(detailOpen) return; if(mode==='about'&&e.target.closest('.about-panel,.about-side')) return; e.preventDefault(); if(detailOpen||mode!=='spiral') return;
+addEventListener('wheel',e=>{ if(detailOpen) return; if(mode==='about'&&e.target.closest('.about-panel,.about-side')) return; e.preventDefault(); if(detailOpen) return;
+  if(mode==='grid'){ gridScroll=clamp(gridScroll+(e.deltaY)*.02,0,gridMax); return; }
+  if(mode!=='spiral') return;
   target+=Math.max(-1,Math.min(1,(e.deltaY+e.deltaX)*.0026)); lastInput=performance.now(); snapSoon(); },{passive:false});
 const ray=new THREE.Raycaster(), ndc=new THREE.Vector2(); let down=null;
 function pick(e){ if(mode==='about') return null; ndc.set(e.clientX/innerWidth*2-1, -(e.clientY/innerHeight*2-1)); ray.setFromCamera(ndc,camera);
   for(const hit of ray.intersectObjects(hitMeshes,false)){ const s=hit.object.userData.s; if(s.fade>.3 && (mode!=='grid'||s.inGrid)) return s; } return null; }
-canvas.addEventListener('pointerdown',e=>{ down={x:e.clientX,y:e.clientY,start:target,moved:false}; canvas.setPointerCapture(e.pointerId); });
+canvas.addEventListener('pointerdown',e=>{ down={x:e.clientX,y:e.clientY,start:target,gs:gridScroll,moved:false}; canvas.setPointerCapture(e.pointerId); });
 canvas.addEventListener('pointermove',e=>{ mouse.x=e.clientX/innerWidth*2-1; mouse.y=e.clientY/innerHeight*2-1;
   if(down){ const dx=e.clientX-down.x, dy=e.clientY-down.y; if(Math.hypot(dx,dy)>6){ down.moved=true; if(mode==='spiral') canvas.classList.add('dragging'); }
+    if(down.moved&&!detailOpen&&mode==='grid'){ const vh=2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*(gridCam.pos.z-G.z); gridScroll=clamp(down.gs+dy*vh/innerHeight,0,gridMax); }
     if(down.moved&&!detailOpen&&mode==='spiral'){ target=down.start-(dy+dx*.6)*.0065; lastInput=performance.now(); } }
   else canvas.classList.toggle('pointer',!!pick(e)); });
 canvas.addEventListener('pointerup',e=>{ canvas.classList.remove('dragging'); if(!down) return;
@@ -1012,6 +1039,7 @@ function frame(){
     s.g.quaternion.slerpQuaternions(_sq, _gq, L);
     let f=Math.pow(1-sstep(.7,8.4, rel>0?rel*1.15:-rel*1.3),1.3);
     if(mode==='grid') f = s.inGrid ? 1 : 0;
+    else if(s.solo) f = 0;
     s.fade+=(f-s.fade)*(1-Math.exp(-dt*(mode==='grid'&&!s.inGrid?6:4)));
     s.flick=0;
     const near = mode==='grid' ? .35 : 1-sstep(.2,1.4,Math.abs(rel));
@@ -1062,8 +1090,8 @@ function frame(){
       camPos.set(ABOUT_CAM.pos.x+mouse.sx*1.2, ABOUT_CAM.pos.y-mouse.sy*.8, ABOUT_CAM.pos.z+Math.sin(t*.12)*1.5);
       camLook.set(ABOUT_CAM.look.x+mouse.sx*2.5, ABOUT_CAM.look.y-mouse.sy*1.5, ABOUT_CAM.look.z);
     } else if(mode==='grid'){
-      camPos.copy(gridCam.pos).add(new THREE.Vector3(mouse.sx*.6,-mouse.sy*.4,0));
-      camLook.copy(gridCam.look);
+      camPos.copy(gridCam.pos).add(new THREE.Vector3(mouse.sx*.6,-mouse.sy*.4-gridScroll,0));
+      camLook.copy(gridCam.look); camLook.y-=gridScroll;
     } else {
       const sc=SPIRAL_CAM();
       const dz=detailOpen?7:0;
