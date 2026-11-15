@@ -65,12 +65,15 @@
   body.about-ready.page-about #about, body.about-ready.page-news #news{opacity:1;transform:none;pointer-events:auto}
   .about-panel .tag{font-family:var(--mono);font-size:13px;letter-spacing:.16em;color:var(--dim)}
   .about-panel .tag b{color:var(--accent);font-weight:400}
-  .about-panel .lead{margin-top:20px;max-width:900px;font-weight:300;font-size:clamp(15px,1.15vw,18px);line-height:1.65;color:rgba(242,241,238,.9)}
-  #about{overflow:hidden;padding-right:0}
+  .about-panel .lead{margin-top:20px;max-width:900px;font-weight:300;font-size:clamp(17px,1.4vw,22px);line-height:1.65;color:rgba(242,241,238,.9)}
+  #about{overflow:hidden;padding-right:0;width:calc(74vw - 120px)}
+  #about .lead,#about ul{max-width:none}
   #about h3{margin-top:34px}
-  #about li{padding:9px 0;font-size:14.5px}
+  #about li{padding:10px 0;font-size:clamp(15px,1.1vw,17.5px)}
+  #about li span{font-size:12.5px}
+  #about h3{font-size:13px}
   #about .cvlink{margin:14px 0 0}
-  .about-side .portrait{max-height:calc(100vh - 360px);max-width:calc(100vh - 360px)}
+  .about-side .portrait{max-height:calc(100vh - 380px);max-width:calc(100vh - 380px)}
   .about-panel h3{margin-top:52px;font-family:var(--mono);font-weight:400;font-size:13px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;padding-bottom:12px;border-bottom:1px solid rgba(242,241,238,.1)}
   .about-panel ul{list-style:none;max-width:900px}
   .about-panel li{display:grid;grid-template-columns:110px 1fr;gap:16px;padding:13px 0;border-bottom:1px solid rgba(242,241,238,.06);font-size:17px;font-weight:300;line-height:1.5}
@@ -80,7 +83,7 @@
   #news .tag,#news ul{max-width:900px}
   .about-panel .cvlink{display:inline-block;margin:18px 0 30px;font-family:var(--mono);font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg);text-decoration:none;border:1px solid rgba(242,241,238,.35);padding:12px 18px;border-radius:2px;transition:background .3s}
   .about-panel .cvlink:hover{background:rgba(242,241,238,.08)}
-  .about-side{position:fixed;z-index:6;top:150px;right:34px;width:calc(33.3vw - 50px);opacity:0;transform:translateY(10px);pointer-events:none;transition:opacity .6s ease .1s,transform .8s cubic-bezier(.2,.7,.2,1) .1s}
+  .about-side{position:fixed;z-index:6;top:150px;right:34px;width:calc(26vw - 20px);opacity:0;transform:translateY(10px);pointer-events:none;transition:opacity .6s ease .1s,transform .8s cubic-bezier(.2,.7,.2,1) .1s}
   body.about-ready.page-about .about-side{opacity:1;transform:none;pointer-events:auto}
   .news-list li{grid-template-columns:110px 1fr auto}
   .news-list li b{font-family:var(--mono);font-size:12px;font-weight:400;letter-spacing:.14em;color:var(--accent);padding-top:3px}
@@ -89,7 +92,9 @@
   .links{margin-top:22px;list-style:none}
   .links li{display:grid;grid-template-columns:96px 1fr;gap:12px;padding:11px 0;border-bottom:1px solid rgba(242,241,238,.08);font-size:16px;font-weight:300}
   .links li span{font-family:var(--mono);font-size:12.5px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase;padding-top:2px}
-  .links a{color:var(--fg);text-decoration:none;word-break:break-all}
+  .links a{color:var(--fg);text-decoration:none;justify-self:end;font-size:18px;line-height:1;transition:transform .3s}
+  .links a:hover{transform:translate(2px,-2px)}
+  .links li{align-items:center}
   .links a:hover{opacity:.7}
   .latest{top:96px;right:34px;text-align:right;max-width:300px;text-decoration:none;color:var(--fg);pointer-events:auto;cursor:pointer}
   .latest .k{font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--dim)}
@@ -213,7 +218,7 @@
   <h3>Skills</h3>
   <ul>
     <li><span>Creative</span><div>Interactive storytelling, motion graphics, animation, virtual reality, physical computing, 3D design and fabrication, generative AI</div></li>
-    <li><span>Software</span><div>TouchDesigner, Unreal Engine, Blender, Cinema 4D, Max/MSP/Jitter, p5.js, Arduino, Adobe Suite</div></li>
+    <li><span>Software</span><div>TouchDesigner, Unreal Engine, Blender, Cinema 4D, Max/MSP/Jitter, p5.js, Arduino, Photoshop, After Effects, Premiere Pro, Illustrator, InDesign</div></li>
     <li><span>Languages</span><div>Python, JavaScript</div></li>
   </ul>
 
@@ -423,7 +428,7 @@ const EVENTS = [
 /* Contact links: replace with your own. PORTRAIT: an image path such as 'img/portrait.jpg'. */
 /* News: newest first. Add talks, awards, residencies, publications here too. Defaults to the exhibition list. */
 const NEWS = EVENTS.slice();
-const LINKS = { email:'jintongyang@ucsb.edu', instagram:'', linkedin:'yangjintong' };
+const LINKS = { email:'jintongyang@ucsb.edu', instagram:'https://www.instagram.com/', linkedin:'https://www.linkedin.com/in/yangjintong/' };
 const PORTRAIT = 'img/portrait.jpg';
 
 const R = 10.5, STEP = 0.66, RISE = 3.0;
@@ -922,9 +927,9 @@ const evDate=d=>{ const [m,y]=d.split(' '); return new Date(`${m} 1, ${y}`); };
   el.style.display='none';   // home view no longer shows news
   el.innerHTML=`<div class="k"><b>NEWS</b></div>`+recent.map(([d,t,v])=>`<div class="t"><span class="d">${d.toUpperCase()}</span>${t}</div><div class="v">${v}</div>`).join('');
   el.onclick=e=>{ e.preventDefault(); goAbout('news'); }; }
-{ const e=document.getElementById('lkEmail'); e.textContent=LINKS.email; e.href='mailto:'+LINKS.email;
-  const ig=document.getElementById('lkIg'); if(LINKS.instagram){ ig.textContent='@'+LINKS.instagram; ig.href='https://instagram.com/'+LINKS.instagram; } else ig.closest('li').style.display='none';
-  const li=document.getElementById('lkLi'); li.textContent='linkedin.com/in/'+LINKS.linkedin; li.href='https://www.linkedin.com/in/'+LINKS.linkedin;
+{ const e=document.getElementById('lkEmail'); e.textContent='\u2197'; e.title=LINKS.email; e.setAttribute('aria-label','Email '+LINKS.email); e.href='mailto:'+LINKS.email;
+  const ig=document.getElementById('lkIg'); const igh=LINKS.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\/?/,'').replace(/\/$/,''); ig.textContent='\u2197'; ig.title=igh?'@'+igh:'Instagram'; ig.setAttribute('aria-label','Instagram'); ig.href=LINKS.instagram; ig.target='_blank'; ig.rel='noopener';
+  const li=document.getElementById('lkLi'); li.textContent='\u2197'; li.title='LinkedIn'; li.setAttribute('aria-label','LinkedIn'); li.href=LINKS.linkedin; li.target='_blank'; li.rel='noopener';
   if(PORTRAIT){ const im=new Image(); im.alt='Jintong Yang'; im.onload=()=>{ const P=document.getElementById('portrait'); P.textContent=''; P.appendChild(im); }; im.src=PORTRAIT; } }
 let travel=null, warpAcc=0;
 const SPIRAL_CAM=()=>({ pos:new THREE.Vector3(1.0,1.6,R+16*(camera.aspect<1?1.6:1)), look:new THREE.Vector3(-.6,-.35,R-4.5) });
