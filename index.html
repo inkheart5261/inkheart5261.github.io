@@ -169,7 +169,7 @@
   .wp-next a:hover{color:var(--fg)}
   .wp-next a:last-child{text-align:right}
 
-  .veil{position:fixed;inset:0;z-index:20;background:#000;display:grid;place-items:center;transition:opacity 1.8s ease}
+  .veil{position:fixed;inset:0;z-index:20;background:#000;display:grid;place-items:center;transition:opacity .9s ease}
   .veil.gone{opacity:0;pointer-events:none}
   .veil span{font-family:var(--mono);font-size:13px;letter-spacing:.3em;color:var(--dim)}
 
@@ -189,6 +189,18 @@
     .wp-gallery{grid-template-columns:1fr}
   }
 </style>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/postprocessing/EffectComposer.js" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/postprocessing/RenderPass.js" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/postprocessing/UnrealBloomPass.js" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/postprocessing/OutputPass.js" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/postprocessing/ShaderPass.js" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/postprocessing/Pass.js" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/postprocessing/MaskPass.js" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/shaders/CopyShader.js" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/shaders/LuminosityHighPassShader.js" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/shaders/OutputShader.js" crossorigin>
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -454,7 +466,7 @@ const ABOUT_Z = -300;
 /* ---------------- renderer ---------------- */
 const canvas = document.getElementById('gl');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, powerPreference:'high-performance' });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
 renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
@@ -577,9 +589,9 @@ const beams=[];
 
 /* ---------------- light & shadow sweeping across the dark ---------------- */
 const POLY=(()=>{
-  const mat=new THREE.ShaderMaterial({ uniforms:{ uTime:U.uTime, uSweep:{value:0}, tA:{value:null}, tB:{value:null}, uMix:{value:1}, uImg:{value:0}, uAspA:{value:1.5}, uAspB:{value:1.5}, uScr:{value:new THREE.Vector2(1,1)} }, depthWrite:false, depthTest:false, fog:false,
-    vertexShader:`varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
-    fragmentShader:`uniform float uTime,uSweep,uMix,uImg,uAspA,uAspB; uniform vec2 uScr; uniform sampler2D tA,tB; varying vec2 vUv;
+  const mat=new THREE.ShaderMaterial({ uniforms:{ uTime:U.uTime, uSweep:{value:0}, tA:{value:null}, tB:{value:null}, uMix:{value:1}, uImg:{value:0}, uAspA:{value:1.5}, uAspB:{value:1.5}, uScr:{value:new THREE.Vector2(1,1)}, uVis:{value:new THREE.Vector2(.2,.39)} }, depthWrite:false, depthTest:false, fog:false,
+    vertexShader:`uniform vec2 uVis; varying vec2 vUv; varying vec2 vS; void main(){ vS=uv; vUv=.5+(uv-.5)*uVis; gl_Position=vec4(position.xy,0.,1.); }`,
+    fragmentShader:`uniform float uTime,uSweep,uMix,uImg,uAspA,uAspB; uniform vec2 uScr; uniform sampler2D tA,tB; varying vec2 vUv; varying vec2 vS;
       vec3 cov(sampler2D t,float ia,vec2 uv,float z,vec2 o){ float sa=uScr.x/uScr.y; vec2 q=(uv-.5)/z+o; if(ia>sa) q.x*=sa/ia; else q.y*=ia/sa; return texture2D(t,clamp(q+.5,.001,.999),1.8).rgb; }
       float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
       float n2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+1.),f.x),f.y);}
@@ -612,7 +624,7 @@ const POLY=(()=>{
         float shadow=.7+.3*smoothstep(.3,.7,fbm(p*1.4+w*1.2+vec2(t*.02,0.)));
         float vig=(1.-smoothstep(.25,1.25,length((vUv-.5)*vec2(1.6,1.))));
         // the focused work's images drift through the aurora, slowly crossfading
-        vec2 suv=gl_FragCoord.xy/uScr;
+        vec2 suv=vS;
         float z=1.07+.03*sin(uTime*.045); vec2 o=vec2(sin(uTime*.031),cos(uTime*.027))*.018;
         vec3 img=mix(cov(tA,uAspA,suv,z,o), cov(tB,uAspB,suv,z+.02*(1.-uMix),o), uMix);
         img=mix(img, img*vec3(.86,1.,1.06), .35);
@@ -621,10 +633,22 @@ const POLY=(()=>{
         vec3 outc=col*shadow*.15*vig + img*uImg*ivig*(.09+.3*aur);
         gl_FragColor=vec4(outc,1.);
       }` });
-  const plane=new THREE.Mesh(new THREE.PlaneGeometry(2600,820), mat);
-  plane.position.set(0,0,-420); plane.renderOrder=-10; plane.frustumCulled=false;
-  camera.add(plane); scene.add(camera);
-  function update(t,scroll,warpAmt){ mat.uniforms.uSweep.value=scroll*.08+warpAmt; }
+  // the aurora is soft, so it is drawn at a third of the screen resolution and stretched up: same look, a fraction of the GPU work
+  const bgScene=new THREE.Scene(), bgCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+  const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),mat); quad.frustumCulled=false; bgScene.add(quad);
+  const rt=new THREE.WebGLRenderTarget(4,4,{ depthBuffer:false });
+  rt.texture.colorSpace=THREE.LinearSRGBColorSpace;
+  scene.background=rt.texture;
+  let last=-1;
+  function update(t,scroll,warpAmt){
+    mat.uniforms.uSweep.value=scroll*.08+warpAmt;
+    const w=Math.max(64,Math.round(innerWidth/3)), h=Math.max(64,Math.round(innerHeight/3));
+    if(rt.width!==w||rt.height!==h){ rt.setSize(w,h); mat.uniforms.uScr.value.set(w,h); }
+    // the plane this replaces was 2600x820 at distance 420: keep the same framing
+    const vh=2*420*Math.tan(THREE.MathUtils.degToRad(camera.fov/2)), vw=vh*camera.aspect;
+    mat.uniforms.uVis.value.set(vw/2600, vh/820);
+    const prev=renderer.getRenderTarget(); renderer.setRenderTarget(rt); renderer.render(bgScene,bgCam); renderer.setRenderTarget(prev);
+  }
   return { update, u:mat.uniforms };
 })();
 
@@ -733,9 +757,13 @@ const assets = WORKS.map((w,i)=>({ tex:makeTexture(w.look, 101+i*17), label:null
 const screens=[], hitMeshes=[];
 const coverOf=w=>w.image||`img/${w.key}/cover.jpg`;
 const galleryOf=(w,i)=>(w.images&&w.images[i])||`img/${w.key}/${i+1}.jpg`;
-WORKS.forEach((w,i)=>{ new THREE.TextureLoader().load(coverOf(w), t=>{ t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=MAXANI; assets[i].tex=t; assets[i].real=true; screens.forEach(s=>{ if(s.wi===i) s.setTex(t); }); }, undefined, ()=>{}); });
+const TEXCACHE=new Map();
+const loadTexP=path=>{ if(!TEXCACHE.has(path)) TEXCACHE.set(path,new Promise(res=>{ new THREE.TextureLoader().load(path,t=>{ t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=MAXANI; res(t); },undefined,()=>res(null)); })); return TEXCACHE.get(path); };
+// load the covers nearest the front first, the rest a moment later
+WORKS.forEach((w,i)=>setTimeout(()=>loadTexP(coverOf(w)).then(t=>{ if(!t) return; assets[i].tex=t; assets[i].real=true; screens.forEach(s=>{ if(s.wi===i) s.setTex(t); }); }), (i<3||i>=N-2)?0:400+i*60));
 
 const geo = new THREE.PlaneGeometry(PW+PAD, PH+PAD, 48, 32);
+const HITGEO=new THREE.PlaneGeometry(PW,PH), HITMAT=new THREE.MeshBasicMaterial({ visible:false });
 function buildScreen(copy,forced){
   const wi=forced!==undefined?forced:copy%N, A=assets[wi], r=rng(copy*13+7), seed=r()*10;
   const g=new THREE.Group();
@@ -758,7 +786,8 @@ function buildScreen(copy,forced){
   const s={ g, main, echoes, aura, auraMat, streakMat, rays, label, lm, wi, copy, fade:0, tilt:(r()-.5)*.09, flick:0, rel:0,
     layout:0, lt:0, ltAt:0, gpos:new THREE.Vector3(), inGrid:false,
     setTex(t){ const im=t.image; if(im&&im.width) main.material.uniforms.uImgA.value=im.width/im.height; streakMat.uniforms.uTex.value=t; main.material.uniforms.uTex.value=t; echoes.forEach(e=>e.material.uniforms.uTex.value=t); } };
-  main.userData.s=s; hitMeshes.push(main); screens.push(s);
+  const hit=new THREE.Mesh(HITGEO,HITMAT); hit.userData.s=s; g.add(hit);
+  main.userData.s=s; hitMeshes.push(hit); screens.push(s);
 }
 for(let i=0;i<PERIOD;i++) buildScreen(i);
 for(let k=0;k<INDEPENDENT.length;k++){ buildScreen(PERIOD+k, N+k); screens[screens.length-1].solo=true; }
@@ -783,7 +812,7 @@ const clean=new ShaderPass({ uniforms:{ tDiffuse:{value:null} },
       bool bad = (c.r!=c.r)||(c.g!=c.g)||(c.b!=c.b)||c.r>6e4||c.g>6e4||c.b>6e4;   // NaN / Inf would bloom into black squares
       gl_FragColor = bad ? vec4(0.,0.,0.,1.) : vec4(clamp(c.rgb,0.,24.),1.); }` });
 composer.addPass(clean);
-const bloom=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight), .55, .5, .82); composer.addPass(bloom);
+const bloom=new UnrealBloomPass(new THREE.Vector2(innerWidth/2,innerHeight/2), .55, .5, .82); composer.addPass(bloom);
 const warp=new ShaderPass({ uniforms:{ tDiffuse:{value:null}, uAmt:{value:0} },
   vertexShader:`varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
   fragmentShader:`uniform sampler2D tDiffuse; uniform float uAmt; varying vec2 vUv;
@@ -911,7 +940,7 @@ function fillDetail(a){ const w=WORKS[a]; curWork=a; const $=id=>document.getEle
   const H=w.honors||[]; $('dHonorsWrap').style.display=H.length?'':'none';
   $('dHonors').innerHTML=H.map(([d,t])=>`<li><span>${esc(d).toUpperCase()}</span><div>${esc(t)}</div></li>`).join('');
   const caps=(w.captions||[]).slice(1);
-  $('dGallery').innerHTML=caps.map((c,i)=>`<figure class="${i===0?'full':''}"><div class="ph"><span>IMAGE ${i+1}</span><img src="${galleryOf(w,i)}" alt="${esc(c)}" onload="this.previousElementSibling.remove()" onerror="this.remove()"></div><figcaption>${esc(c)}</figcaption></figure>`).join('');
+  $('dGallery').innerHTML=caps.map((c,i)=>`<figure class="${i===0?'full':''}"><div class="ph"><span>IMAGE ${i+1}</span><img src="${galleryOf(w,i)}" alt="${esc(c)}" loading="lazy" decoding="async" onload="this.previousElementSibling.remove()" onerror="this.remove()"></div><figcaption>${esc(c)}</figcaption></figure>`).join('');
   $('dCredits').textContent=w.credits||''; $('dCredits').style.display=w.credits?'':'none';
   const lo=isSolo(a)?N:0, sz=isSolo(a)?WORKS.length-N:N, pv=lo+mod(a-lo-1,sz), nx=lo+mod(a-lo+1,sz);
   $('dPrev').innerHTML=`<small>← PREVIOUS</small>${esc(WORKS[pv].title)}`; $('dPrev').onclick=e=>{ e.preventDefault(); openDetail(pv); };
@@ -988,7 +1017,8 @@ canvas.addEventListener('pointermove',e=>{ mouse.x=e.clientX/innerWidth*2-1; mou
   if(down){ const dx=e.clientX-down.x, dy=e.clientY-down.y; if(Math.hypot(dx,dy)>6){ down.moved=true; if(mode==='spiral') canvas.classList.add('dragging'); }
     if(down.moved&&!detailOpen&&mode==='grid'){ const vh=2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*(gridCam.pos.z-G.z); gridScroll=clamp(down.gs+dy*vh/innerHeight,0,gridMax); }
     if(down.moved&&!detailOpen&&mode==='spiral'){ target=down.start-(dy+dx*.6)*.0065; lastInput=performance.now(); } }
-  else canvas.classList.toggle('pointer',!!pick(e)); });
+  else if(!hoverQ){ hoverQ=true; const ev={clientX:e.clientX,clientY:e.clientY}; requestAnimationFrame(()=>{ hoverQ=false; canvas.classList.toggle('pointer',!!pick(ev)); }); } });
+let hoverQ=false;
 canvas.addEventListener('pointerup',e=>{ canvas.classList.remove('dragging'); if(!down) return;
   if(!down.moved){ const s=pick(e);
     if(s){ if(mode==='spiral') target=Math.round(p+s.rel); openDetail(s.wi); } }
@@ -1003,7 +1033,6 @@ addEventListener('keydown',e=>{
 
 /* ---------------- the focused work's images loop inside the aurora ---------------- */
 const SLIDE={ list:[], idx:0, work:-1, cur:null, next:null, mix:1, last:0, cache:new Map(), op:0 };
-const loadTexP=path=>{ if(!SLIDE.cache.has(path)) SLIDE.cache.set(path,new Promise(res=>{ new THREE.TextureLoader().load(path,t=>{ t.colorSpace=THREE.SRGBColorSpace; res(t); },undefined,()=>res(null)); })); return SLIDE.cache.get(path); };
 const aspOf=t=>{ const im=t&&t.image; return im&&im.width?im.width/im.height:1.5; };
 function crossTo(t){
   if(!t) return; const B=POLY.u;
@@ -1027,11 +1056,10 @@ function updateSlide(dt,now){
   SLIDE.mix=Math.min(1,SLIDE.mix+dt/2.6); const m=SLIDE.mix; B.uMix.value=m*m*(3-2*m);
   if(SLIDE.mix>=1 && SLIDE.list.length>1 && now-SLIDE.last>6500){ SLIDE.idx=(SLIDE.idx+1)%SLIDE.list.length; crossTo(SLIDE.list[SLIDE.idx]); }
   const want=(mode==='spiral'&&!travel)?1:0; SLIDE.op+=(want-SLIDE.op)*(1-Math.exp(-dt*1.5)); B.uImg.value=SLIDE.op;
-  renderer.getDrawingBufferSize(B.uScr.value);
 }
 
 function onResize(){ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight);
-  composer.setSize(innerWidth,innerHeight); bloom.setSize(innerWidth,innerHeight); grade.uniforms.uRes.value.set(innerWidth,innerHeight); U.uPR.value=renderer.getPixelRatio();
+  composer.setSize(innerWidth,innerHeight); bloom.setSize(innerWidth/2,innerHeight/2); grade.uniforms.uRes.value.set(innerWidth,innerHeight); U.uPR.value=renderer.getPixelRatio();
   if(mode==='grid') layoutGrid(); }
 addEventListener('resize',onResize); onResize();
 
@@ -1040,8 +1068,13 @@ const camPos=new THREE.Vector3(), camLook=new THREE.Vector3();
 const curPos=new THREE.Vector3(0,4,R+22), curLook=new THREE.Vector3(0,0,R-4);
 const _sp=new THREE.Vector3(), _sq=new THREE.Quaternion(), _gq=new THREE.Quaternion(), _e=new THREE.Euler();
 const clock=new THREE.Clock();
+let perfN=0, perfT=0, perfDone=false;
 function frame(){
-  const dt=Math.min(clock.getDelta(),.05), t=clock.elapsedTime, now=performance.now();
+  const rawDt=clock.getDelta(), dt=Math.min(rawDt,.05), t=clock.elapsedTime, now=performance.now();
+  // after warming up, measure ~2s of frames; if the laptop struggles, render at a lower resolution
+  if(!perfDone && t>1.5){ perfN++; perfT+=rawDt;
+    if(perfT>2){ perfDone=true; const fps=perfN/perfT;
+      if(fps<45 && renderer.getPixelRatio()>1){ renderer.setPixelRatio(1); onResize(); } } }
   U.uTime.value=t;
   if(mode==='spiral'&&!detailOpen&&!down&&!travel&&now-lastInput>7000&&now-lastAuto>5600){ target=Math.round(target)+1; lastAuto=now; }
   p+=(target-p)*(1-Math.exp(-dt*2.6));
@@ -1127,13 +1160,15 @@ function frame(){
   requestAnimationFrame(frame);
 }
 
-async function boot(){
-  try{ await Promise.race([Promise.all([document.fonts.load('300 30px Inter'),document.fonts.load('400 26px "JetBrains Mono"')]), new Promise(r=>setTimeout(r,2500))]); }catch(e){}
-  WORKS.forEach((w,i)=>assets[i].label=labelTexture(w,i));
-  screens.forEach(s=>{ s.lm.map=assets[s.wi].label; s.lm.needsUpdate=true; });
+function buildLabels(){ WORKS.forEach((w,i)=>{ const old=assets[i].label; assets[i].label=labelTexture(w,i); if(old) old.dispose(); });
+  screens.forEach(s=>{ s.lm.map=assets[s.wi].label; s.lm.needsUpdate=true; }); }
+function boot(){
+  buildLabels();
   frame();
   routeHash();
-  setTimeout(()=>document.getElementById('veil').classList.add('gone'),300);
+  requestAnimationFrame(()=>document.getElementById('veil').classList.add('gone'));
+  // labels are only seen in the category grid, so redraw them in the real fonts once they arrive
+  try{ Promise.all([document.fonts.load('300 64px Inter'),document.fonts.load('400 40px "JetBrains Mono"')]).then(buildLabels).catch(()=>{}); }catch(e){}
 }
 boot();
 </script>
