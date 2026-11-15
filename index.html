@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Jintong Yang</title>
+<title>Jintong Yang · Dream Spiral</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
@@ -85,7 +85,9 @@
   .about-panel .cvlink:hover{background:rgba(242,241,238,.08)}
   .about-side{position:fixed;z-index:6;top:150px;right:34px;width:calc(26vw - 20px);opacity:0;transform:translateY(10px);pointer-events:none;transition:opacity .6s ease .1s,transform .8s cubic-bezier(.2,.7,.2,1) .1s}
   body.about-ready.page-about .about-side{opacity:1;transform:none;pointer-events:auto}
-  .news-list li{grid-template-columns:110px 1fr auto}
+  .news-list li{grid-template-columns:110px 1fr auto;align-items:baseline}
+  .news-list i{font-style:italic}
+  .news-list .nv{margin-left:2.2em;font-style:normal;color:var(--dim)}
   .news-list li b{font-family:var(--mono);font-size:12px;font-weight:400;letter-spacing:.14em;color:var(--accent);padding-top:3px}
   .portrait{width:100%;aspect-ratio:1/1;border:1px solid rgba(242,241,238,.14);background:rgba(242,241,238,.03);display:grid;place-items:center;font-family:var(--mono);font-size:12.5px;letter-spacing:.16em;color:var(--faint);overflow:hidden}
   .portrait img{width:100%;height:100%;object-fit:cover;display:block}
@@ -220,7 +222,7 @@
 </section>
 <section class="about-panel" id="about">
   <div class="tag"><b>ABOUT</b></div>
-  <p class="lead">Jintong Yang (杨谨侗) is a multidisciplinary media artist and researcher whose work sits between HCI, time-based media art, and media theory. Informed by phenomenology and critical approaches to technology, she examines how computational systems mediate embodied experience, perception, and expression through artistic practice. Working across animation, performance, and installation, she bridges digital and physical processes in interactive and immersive works. She holds an MFA in Computer Arts from the School of Visual Arts, New York City, and is currently pursuing a PhD in Media Arts and Technology at the University of California, Santa Barbara.</p>
+  <p class="lead">Jintong Yang (杨谨侗) is a multidisciplinary media artist and researcher whose work sits between HCI, time-based media art, and media theory. Informed by phenomenology and critical approaches to technology, she examines how computational systems mediate embodied experience, perception, and expression through artistic practice. Working across animation, performance, and installation, she bridges digital and physical processes in interactive and immersive works. She holds an MFA in Computer Arts from the School of Visual Arts, New York, and is currently pursuing a PhD in Media Arts and Technology at the University of California, Santa Barbara.</p>
 
   <h3>Skills</h3>
   <ul>
@@ -418,20 +420,26 @@ const FILTERS = ['All','','Research','Art','Independent','','Interface','Perform
 const FILTER_LABEL = { Art:'Art Projects', Independent:'Independent Works' };
 
 /* Selected exhibitions & performances, newest first. The first one also shows top right as LATEST. */
+/* Wrap exhibition and work titles in *asterisks* to set them in italics. */
 const EVENTS = [
-  ['Oct 2026','Museums of What Will Have Been','The Rhinoceros Theater Festival, Chicago, IL'],
-  ['Jun 2026','MAT End-of-Year Show Regency','UC Santa Barbara, CA'],
-  ['Dec 2024','Dear Lord, Make Me Beautiful (premiere)','Park Avenue Armory, New York, NY'],
-  ['Jul 2024','Chrysalis, Shortlisted, The Meta Morph AI Film Award 2024',''],
-  ['Jan 2024','Chrysalis, 2nd Place in Performance','NYC IO Film Festival'],
-  ['Jan 2024','NYNG 7th Edition of 2023','New York Nil Gallery, New York, NY'],
-  ['Oct 2023','The RASA Project','National Sawdust, Brooklyn, NY'],
-  ['Sep 2023','Global Design Graduate Show 2023, Shortlisted','In collaboration with Gucci'],
-  ['Sep 2023','LAYERS OF REALITY','Romanian Cultural Institute, New York, NY'],
-  ['Jul 2023','Personal Archeology','Personaland Online Global Art Village'],
-  ['Jun 2023','change of he(art)','SVA Chelsea Gallery, New York, NY'],
-  ['Dec 2022','Lonely ROCKS','2022 Miami Art Week, Miami, FL'],
+  ['Oct 2026','Artist, The Rhinoceros Theater Festival','Chicago, IL'],
+  ['Jun 2026','Artist, *Regency:*, MAT End-of-Year Show','UC Santa Barbara, CA'],
+  ['Dec 2024','Visual Team, Premiere at Park Avenue Armory','New York, NY'],
+  ['Jul 2024','Shortlisted, The Meta Morph AI Film Award 2024',''],
+  ['Jan 2024','2nd Place Prize in \u201cPerformance\u201d, NYC IO Film Festival',''],
+  ['Jan 2024','7th NYNG \u201cBEST INSTALLATION\u201d','New York Nil Gallery'],
+  ['Oct 2023','Visual Team, Performance at National Sawdust','Brooklyn, NY'],
+  ['Sep 2023','Shortlisted, Global Design Graduate Show 2023','in collaboration with Gucci'],
+  ['Sep 2023','Selected Artist, *LAYERS OF REALITY*','Romanian Cultural Institute, New York, NY'],
+  ['Jul 2023','Selected Artist, *Personal Archeology*','Personaland Online Global Art Village'],
+  ['Jun 2023','Artist, *change of he(art)*','SVA Chelsea Gallery, New York, NY'],
+  ['Dec 2022','Artist, *Lonely ROCKS*','Art Basel Miami Beach 2022, Miami, FL'],
+  ['Jul 2020','Outstanding Graduate','Beijing Regular Institutions of Higher Education'],
+  ['Apr 2018','3rd Prize, The 6th English Interpretation Competition','Beijing International Studies University'],
+  ['Feb 2018','Outstanding Works Award, Design','ArtOne Awards: The 1st International Design Competition'],
+  ['Apr 2017','3rd Prize, Computer Design Competition of Chinese College Students',''],
 ];
+const ital=t=>String(t).replace(/\*([^*]+)\*/g,'<i>$1</i>');
 /* Contact links: replace with your own. PORTRAIT: an image path such as 'img/portrait.jpg'. */
 /* News: newest first. Add talks, awards, residencies, publications here too. Defaults to the exhibition list. */
 const NEWS = EVENTS.slice();
@@ -928,12 +936,12 @@ const evDate=d=>{ const [m,y]=d.split(' '); return new Date(`${m} 1, ${y}`); };
 { // News page: every item, newest first. Items dated in the future are marked UPCOMING.
   const now=new Date(), ul=document.getElementById('newsList');
   NEWS.forEach(([d,t,v])=>{ const li=document.createElement('li'); const up=evDate(d)>now;
-    li.innerHTML=`<span>${d.toUpperCase()}</span><div>${t}${v?`<br><em>${v}</em>`:''}</div>${up?'<b>UPCOMING</b>':''}`; ul.appendChild(li); });
+    li.innerHTML=`<span>${d.toUpperCase()}</span><div>${ital(t)}${v?`<em class="nv">${v}</em>`:''}</div>${up?'<b>UPCOMING</b>':''}`; ul.appendChild(li); });
   // Top right: only news from the last three months (and anything upcoming), at most three
   const cut=new Date(now.getFullYear(),now.getMonth()-3,now.getDate()), el=document.getElementById('latest');
   const recent=NEWS.filter(([d])=>{ const x=evDate(d); return new Date(x.getFullYear(),x.getMonth()+1,0)>=cut; }).slice(0,3);
   el.style.display='none';   // home view no longer shows news
-  el.innerHTML=`<div class="k"><b>NEWS</b></div>`+recent.map(([d,t,v])=>`<div class="t"><span class="d">${d.toUpperCase()}</span>${t}</div><div class="v">${v}</div>`).join('');
+  el.innerHTML=`<div class="k"><b>NEWS</b></div>`+recent.map(([d,t,v])=>`<div class="t"><span class="d">${d.toUpperCase()}</span>${ital(t)}</div><div class="v">${v}</div>`).join('');
   el.onclick=e=>{ e.preventDefault(); goAbout('news'); }; }
 { const e=document.getElementById('lkEmail'); e.innerHTML='Email<i>\u2197</i>'; e.title=LINKS.email; e.setAttribute('aria-label','Email '+LINKS.email); e.href='mailto:'+LINKS.email;
   const ig=document.getElementById('lkIg'); const igh=LINKS.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\/?/,'').replace(/\/$/,''); ig.innerHTML='Instagram<i>\u2197</i>'; ig.title=igh?'@'+igh:'Instagram'; ig.setAttribute('aria-label','Instagram'); ig.href=LINKS.instagram; ig.target='_blank'; ig.rel='noopener';
