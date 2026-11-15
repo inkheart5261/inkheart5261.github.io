@@ -92,9 +92,12 @@
   .links{margin-top:22px;list-style:none}
   .links li{display:grid;grid-template-columns:96px 1fr;gap:12px;padding:11px 0;border-bottom:1px solid rgba(242,241,238,.08);font-size:16px;font-weight:300}
   .links li span{font-family:var(--mono);font-size:12.5px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase;padding-top:2px}
-  .links a{color:var(--fg);text-decoration:none;justify-self:end;font-size:18px;line-height:1;transition:transform .3s}
-  .links a:hover{transform:translate(2px,-2px)}
-  .links li{align-items:center}
+  .links{display:flex;flex-wrap:wrap;gap:12px 30px;border-top:1px solid rgba(242,241,238,.1);padding-top:18px}
+  .links li{display:block;padding:0;border:none}
+  .links li span{display:none}
+  .links a{font-family:var(--mono);font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--fg);text-decoration:none;transition:opacity .3s}
+  .links a i{font-style:normal;display:inline-block;margin-left:6px;transition:transform .3s}
+  .links a:hover i{transform:translate(2px,-2px)}
   .links a:hover{opacity:.7}
   .latest{top:96px;right:34px;text-align:right;max-width:300px;text-decoration:none;color:var(--fg);pointer-events:auto;cursor:pointer}
   .latest .k{font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--dim)}
@@ -115,15 +118,19 @@
   .wp-top{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:center;padding:24px 34px;background:linear-gradient(180deg,rgba(2,2,4,.95) 60%,rgba(2,2,4,0))}
   .wp-top a,.wp-top span{font-family:var(--mono);font-size:13px;letter-spacing:.16em;color:var(--dim);text-decoration:none}
   .wp-top a:hover{color:var(--fg)}
+  .wp-top .wp-name{font-family:var(--sans);font-weight:500;font-size:17px;letter-spacing:.2em;color:var(--fg)}
+  .wp-nav{display:flex;gap:30px}
+  .wp-nav a{font-size:13px}
+  .wp-nav a.on{color:var(--fg)}
   .wp-top span b{color:var(--accent);font-weight:400}
   .wp-wrap{max-width:1320px;margin:0 auto;padding:0 34px}
-  .wp-head{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:64px;padding:48px 0 34px;align-items:end}
+  .wp-head{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:64px;padding:48px 0 34px;align-items:start}
   .wp-head .idx{font-family:var(--mono);font-size:13px;letter-spacing:.14em;color:var(--dim)}
   .wp-head .idx b{color:var(--accent);font-weight:400}
   .wp-head h2{margin-top:18px;font-weight:200;font-size:clamp(35.5px,3.4vw,59px);line-height:1.08;letter-spacing:-.015em}
   .wp-head h3{margin-top:10px;font-weight:300;font-size:clamp(19px,1.4vw,23.5px);color:var(--dim)}
   .wp-head .logline{margin-top:22px;font-weight:300;font-size:19px;line-height:1.55;color:rgba(242,241,238,.82);max-width:620px}
-  .wp-info{display:grid;grid-template-columns:110px 1fr;border-top:1px solid rgba(242,241,238,.12)}
+  .wp-info{display:grid;grid-template-columns:110px 1fr;border-top:1px solid rgba(242,241,238,.12);margin-top:4px}
   .wp-info dt,.wp-info dd{padding:11px 0;border-bottom:1px solid rgba(242,241,238,.07)}
   .wp-info dt{font-family:var(--mono);font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);padding-top:13px}
   .wp-info dd{font-size:16px;font-weight:300;line-height:1.5}
@@ -235,7 +242,7 @@
 </aside>
 
 <div class="workpage" id="detail" aria-hidden="true">
-  <header class="wp-top"><a href="#" id="dBack">← WORK</a><span id="dCount"></span></header>
+  <header class="wp-top"><a href="#" id="dBack" class="wp-name">JINTONG YANG</a><span id="dCount" hidden></span><nav class="wp-nav"><a href="#" data-go="work" class="on">WORK</a><a href="#" data-go="about">ABOUT</a><a href="#" data-go="news">NEWS</a></nav></header>
   <div class="wp-wrap">
     <section class="wp-head">
       <div><div class="idx" id="dIdx"></div><h2 id="dTitle"></h2><h3 id="dSub"></h3><p class="logline" id="dLog"></p></div>
@@ -911,6 +918,7 @@ function openDetail(a){
 function closeDetail(){ detailOpen=false; detail.classList.remove('open'); document.body.classList.remove('detail'); detail.setAttribute('aria-hidden','true'); lastInput=performance.now();
   try{ if(location.hash.startsWith('#work-')) location.hash=''; }catch(e){} }
 document.getElementById('dBack').onclick=e=>{ e.preventDefault(); closeDetail(); };
+document.querySelectorAll('.wp-nav a').forEach(a=>a.onclick=e=>{ e.preventDefault(); const g=a.dataset.go; closeDetail(); if(g!=='work') setTimeout(()=>goAbout(g),60); });
 function routeHash(){ const h=(location.hash||'').slice(1); const i=WORKS.findIndex(w=>slug(w)===h);
   if(i>=0){ if(!detailOpen||curWork!==i) openDetail(i); } else if(detailOpen) closeDetail(); }
 addEventListener('hashchange',routeHash);
@@ -927,9 +935,9 @@ const evDate=d=>{ const [m,y]=d.split(' '); return new Date(`${m} 1, ${y}`); };
   el.style.display='none';   // home view no longer shows news
   el.innerHTML=`<div class="k"><b>NEWS</b></div>`+recent.map(([d,t,v])=>`<div class="t"><span class="d">${d.toUpperCase()}</span>${t}</div><div class="v">${v}</div>`).join('');
   el.onclick=e=>{ e.preventDefault(); goAbout('news'); }; }
-{ const e=document.getElementById('lkEmail'); e.textContent='\u2197'; e.title=LINKS.email; e.setAttribute('aria-label','Email '+LINKS.email); e.href='mailto:'+LINKS.email;
-  const ig=document.getElementById('lkIg'); const igh=LINKS.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\/?/,'').replace(/\/$/,''); ig.textContent='\u2197'; ig.title=igh?'@'+igh:'Instagram'; ig.setAttribute('aria-label','Instagram'); ig.href=LINKS.instagram; ig.target='_blank'; ig.rel='noopener';
-  const li=document.getElementById('lkLi'); li.textContent='\u2197'; li.title='LinkedIn'; li.setAttribute('aria-label','LinkedIn'); li.href=LINKS.linkedin; li.target='_blank'; li.rel='noopener';
+{ const e=document.getElementById('lkEmail'); e.innerHTML='Email<i>\u2197</i>'; e.title=LINKS.email; e.setAttribute('aria-label','Email '+LINKS.email); e.href='mailto:'+LINKS.email;
+  const ig=document.getElementById('lkIg'); const igh=LINKS.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\/?/,'').replace(/\/$/,''); ig.innerHTML='Instagram<i>\u2197</i>'; ig.title=igh?'@'+igh:'Instagram'; ig.setAttribute('aria-label','Instagram'); ig.href=LINKS.instagram; ig.target='_blank'; ig.rel='noopener';
+  const li=document.getElementById('lkLi'); li.innerHTML='LinkedIn<i>\u2197</i>'; li.title='LinkedIn'; li.setAttribute('aria-label','LinkedIn'); li.href=LINKS.linkedin; li.target='_blank'; li.rel='noopener';
   if(PORTRAIT){ const im=new Image(); im.alt='Jintong Yang'; im.onload=()=>{ const P=document.getElementById('portrait'); P.textContent=''; P.appendChild(im); }; im.src=PORTRAIT; } }
 let travel=null, warpAcc=0;
 const SPIRAL_CAM=()=>({ pos:new THREE.Vector3(1.0,1.6,R+16*(camera.aspect<1?1.6:1)), look:new THREE.Vector3(-.6,-.35,R-4.5) });
