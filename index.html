@@ -559,7 +559,7 @@ const beamMat = (op,seed) => new THREE.ShaderMaterial({ transparent:true, depthW
       float xs=x/spread;
       float core=exp(-xs*xs*2.2)*.75+exp(-xs*xs*9.)*.35;
       float along=smoothstep(0.,.45,vUv.y)*(1.-smoothstep(.6,1.,vUv.y));
-      float motes=.78+.22*sin(vUv.y*11.+uTime*.25+uSeed*4.)*sin(xs*5.+uTime*.18+uSeed);
+      float motes=.85+.15*sin(vUv.y*6.+uTime*.25+uSeed*4.);
       float fl=.85+.15*sin(uTime*.4+uSeed*5.);
       gl_FragColor=vec4(vec3(1.,.82,.52)*core*along*motes*fl*uOp,1.); }` });
 const beams=[];
@@ -612,8 +612,8 @@ const POLY=(()=>{
           float up=mix(1.6,5.5,n);
           float r=dy>0.? exp(-dy*up) : exp(-dy*dy*mix(120.,30.,n));     // sharp lower edge, soft curtain above
           float presence=smoothstep(.48,.78,fbm(vec2(p.x*.55+fi*4.1-t*.045, fi*1.7+t*.02)));
-          float rays=.35+.65*fbm(vec2(p.x*7.+w.x*4.+fi*9.-t*.12, t*.22+fi*2.));
-          rays*=.6+.4*fbm(vec2(p.x*23.+w.y*6.+t*.3, t*.45+fi));      // rays flicker and travel along the curtain
+          // soft, broad variation only: no fine vertical rays, which read as lines sweeping across
+          float rays=.55+.45*fbm(vec2(p.x*1.6+w.x*1.5+fi*9., t*.12+fi*2.));
           float k=clamp(dy*1.4+.15+(w.y-.5)*.4,0.,1.);
           vec3 c=k<.45?mix(emerald,teal,k/.45):mix(teal,violet,(k-.45)/.55);
           float amp=.5+.5*fbm(vec2(fi*13.,t*.12));
@@ -623,27 +623,36 @@ const POLY=(()=>{
         }
         float shadow=.7+.3*smoothstep(.3,.7,fbm(p*1.4+w*1.2+vec2(t*.02,0.)));
         float vig=(1.-smoothstep(.25,1.25,length((vUv-.5)*vec2(1.6,1.))));
-        // the focused work's images drift through the aurora, slowly crossfading
-        vec2 suv=vS;
-        float z=1.07+.03*sin(uTime*.045); vec2 o=vec2(sin(uTime*.031),cos(uTime*.027))*.018;
-        vec3 img=mix(cov(tA,uAspA,suv,z,o), cov(tB,uAspB,suv,z+.02*(1.-uMix),o), uMix);
-        img=mix(img, img*vec3(.86,1.,1.06), .35);
         float aur=clamp(dot(col,vec3(.33))*3.5,0.,1.);
-        float ivig=smoothstep(1.05,.2,length((suv-.5)*vec2(1.25,1.)));
-        vec3 outc=col*shadow*.15*vig + img*uImg*ivig*(.09+.3*aur);
-        gl_FragColor=vec4(outc,1.);
+        gl_FragColor=vec4(col*shadow*.15*vig, aur);   // the work's images are added afterwards at full resolution
       }` });
   // the aurora is soft, so it is drawn at a third of the screen resolution and stretched up: same look, a fraction of the GPU work
   const bgScene=new THREE.Scene(), bgCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
   const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),mat); quad.frustumCulled=false; bgScene.add(quad);
-  const rt=new THREE.WebGLRenderTarget(4,4,{ depthBuffer:false });
+  const rt=new THREE.WebGLRenderTarget(4,4,{ depthBuffer:false, type:THREE.HalfFloatType });
   rt.texture.colorSpace=THREE.LinearSRGBColorSpace;
-  scene.background=rt.texture;
+  // full-resolution layer drawn behind everything: the soft aurora (upscaled) plus the focused work's images, kept sharp
+  const U2=mat.uniforms;
+  const comp=new THREE.ShaderMaterial({ depthWrite:false, depthTest:false, fog:false,
+    uniforms:{ tAur:{value:rt.texture}, uTime:U2.uTime, tA:U2.tA, tB:U2.tB, uMix:U2.uMix, uImg:U2.uImg, uAspA:U2.uAspA, uAspB:U2.uAspB, uFull:{value:new THREE.Vector2(1,1)} },
+    vertexShader:`varying vec2 vS; void main(){ vS=uv; gl_Position=vec4(position.xy,.9999,1.); }`,
+    fragmentShader:`uniform sampler2D tAur,tA,tB; uniform float uTime,uMix,uImg,uAspA,uAspB; uniform vec2 uFull; varying vec2 vS;
+      vec3 cov(sampler2D t,float ia,vec2 uv,float z,vec2 o){ float sa=uFull.x/uFull.y; vec2 q=(uv-.5)/z+o; if(ia>sa) q.x*=sa/ia; else q.y*=ia/sa; return texture2D(t,clamp(q+.5,.001,.999)).rgb; }
+      void main(){
+        vec4 a=texture2D(tAur,vS);
+        float z=1.07+.03*sin(uTime*.045); vec2 o=vec2(sin(uTime*.031),cos(uTime*.027))*.018;
+        vec3 img=vec3(0.);
+        if(uImg>.001){ img=mix(cov(tA,uAspA,vS,z,o), cov(tB,uAspB,vS,z+.02*(1.-uMix),o), uMix); img=mix(img, img*vec3(.86,1.,1.06), .35); }
+        float ivig=smoothstep(1.05,.2,length((vS-.5)*vec2(1.25,1.)));
+        gl_FragColor=vec4(a.rgb + img*uImg*ivig*(.12+.34*a.a),1.);
+      }` });
+  const bgQuad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),comp); bgQuad.frustumCulled=false; bgQuad.renderOrder=-1000; scene.add(bgQuad);
   let last=-1;
   function update(t,scroll,warpAmt){
     mat.uniforms.uSweep.value=scroll*.08+warpAmt;
     const w=Math.max(64,Math.round(innerWidth/3)), h=Math.max(64,Math.round(innerHeight/3));
     if(rt.width!==w||rt.height!==h){ rt.setSize(w,h); mat.uniforms.uScr.value.set(w,h); }
+    comp.uniforms.uFull.value.set(innerWidth,innerHeight);
     // the plane this replaces was 2600x820 at distance 420: keep the same framing
     const vh=2*420*Math.tan(THREE.MathUtils.degToRad(camera.fov/2)), vw=vh*camera.aspect;
     mat.uniforms.uVis.value.set(vw/2600, vh/820);
