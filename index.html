@@ -190,6 +190,12 @@
   }
 </style>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
 <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" crossorigin>
 <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/postprocessing/EffectComposer.js" crossorigin>
 <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/postprocessing/RenderPass.js" crossorigin>
@@ -201,12 +207,6 @@
 <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/shaders/CopyShader.js" crossorigin>
 <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/shaders/LuminosityHighPassShader.js" crossorigin>
 <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/shaders/OutputShader.js" crossorigin>
-<script type="importmap">
-{ "imports": {
-  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-}}
-</script>
 </head>
 <body>
 <canvas id="gl"></canvas>
@@ -244,7 +244,7 @@
   </ul>
 
   <h3>CV</h3>
-  <a class="cvlink" href="CV_Jintong_Yang.pdf" target="_blank" rel="noopener">CV (PDF) ↗</a>
+  <a class="cvlink" id="cvlink" href="CV_Jintong_Yang.pdf" target="_blank" rel="noopener">CV (PDF) ↗</a>
 </section>
 <aside class="about-side">
   <div class="portrait" id="portrait">PORTRAIT · 1:1</div>
@@ -456,7 +456,11 @@ const ital=t=>String(t).replace(/\*([^*]+)\*/g,'<i>$1</i>');
 /* News: newest first. Add talks, awards, residencies, publications here too. Defaults to the exhibition list. */
 const NEWS = EVENTS.slice();
 const LINKS = { email:'jintongyang@ucsb.edu', instagram:'https://www.instagram.com/', linkedin:'https://www.linkedin.com/in/yangjintong/' };
-const PORTRAIT = 'img/portrait.jpg';
+/* ---- routing: real paths (yangjintong.com/about) on your site, #hash in previews ---- */
+const USE_PATH = /^https?:$/.test(location.protocol) && !/claude|anthropic/.test(location.hostname);
+const ROOT = USE_PATH ? '/' : '';
+try{ const sp=sessionStorage.getItem('spa-path'); if(sp){ sessionStorage.removeItem('spa-path'); if(USE_PATH) history.replaceState(null,'',sp); } }catch(e){}
+const PORTRAIT = ROOT+'img/portrait.jpg';
 
 const R = 10.5, STEP = 0.66, RISE = 3.0;
 const PW = 7.0, PH = 4.67, PAD = 0.8;
@@ -764,10 +768,12 @@ const rayFS=`uniform sampler2D uTex; uniform float uFade,uTime; varying vec2 vUv
 const ECHO_TINTS=[new THREE.Color(0x7ff6ff), new THREE.Color(0xff7ad9), new THREE.Color(0xfff07a)];
 const assets = WORKS.map((w,i)=>({ tex:makeTexture(w.look, 101+i*17), label:null, url:null }));
 const screens=[], hitMeshes=[];
-const coverOf=w=>w.image||`img/${w.key}/cover.jpg`;
-const galleryOf=(w,i)=>(w.images&&w.images[i])||`img/${w.key}/${i+1}.jpg`;
-const TEXCACHE=new Map();
-const loadTexP=path=>{ if(!TEXCACHE.has(path)) TEXCACHE.set(path,new Promise(res=>{ new THREE.TextureLoader().load(path,t=>{ t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=MAXANI; res(t); },undefined,()=>res(null)); })); return TEXCACHE.get(path); };
+const coverOf=w=>w.image||`${ROOT}img/${w.key}/cover.jpg`;
+const galleryOf=(w,i)=>(w.images&&w.images[i])||`${ROOT}img/${w.key}/${i+1}.jpg`;
+const MISSING=new Set((()=>{ try{ return JSON.parse(sessionStorage.getItem('missing-img')||'[]'); }catch(e){ return []; } })());
+const markMissing=u=>{ MISSING.add(u); try{ sessionStorage.setItem('missing-img',JSON.stringify([...MISSING])); }catch(e){} };
+const TEXCACHE=new Map(); window.__miss=markMissing;
+const loadTexP=path=>{ if(MISSING.has(path)) return Promise.resolve(null); if(!TEXCACHE.has(path)) TEXCACHE.set(path,new Promise(res=>{ new THREE.TextureLoader().load(path,t=>{ t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=MAXANI; res(t); },undefined,()=>{ markMissing(path); res(null); }); })); return TEXCACHE.get(path); };
 // load the covers nearest the front first, the rest a moment later
 WORKS.forEach((w,i)=>setTimeout(()=>loadTexP(coverOf(w)).then(t=>{ if(!t) return; assets[i].tex=t; assets[i].real=true; screens.forEach(s=>{ if(s.wi===i) s.setTex(t); }); }), (i<3||i>=N-2)?0:400+i*60));
 
@@ -892,14 +898,14 @@ function toGrid(cat){
   layoutGrid();
   const now=performance.now();
   screens.forEach(s=>{ const on=gridList.includes(s); s.inGrid=on; s.lt=on?1:0; s.ltAt=now+(on?gridList.indexOf(s)*70:0) + (wasGrid?0:0); });
-  shownKey=''; setHint();
+  shownKey=''; setHint(); setRoute('/'+catSlug(cat));
 }
 function toSpiral(){
   if(mode!=='grid') { markFilter('All'); return; }
   mode='spiral'; gridCat=null; document.body.classList.remove('grid'); markFilter('All');
   const now=performance.now();
   screens.forEach(s=>{ s.lt=0; s.ltAt=now+(s.inGrid?(gridList.length-1-gridList.indexOf(s))*60:0); s.inGrid=false; });
-  lastInput=now; shownKey=''; setHint();
+  lastInput=now; shownKey=''; setHint(); setRoute('/');
 }
 const G=new THREE.Vector3(0,1.0,R+1.5);
 let gridCam={ pos:new THREE.Vector3(), look:new THREE.Vector3() };
@@ -944,12 +950,12 @@ function fillDetail(a){ const w=WORKS[a]; curWork=a; const $=id=>document.getEle
   const hero=img.parentElement; let pt=hero.querySelector('.ph-t'); if(!pt){ pt=document.createElement('span'); pt.className='ph-t'; pt.textContent='HERO IMAGE'; hero.appendChild(pt); }
   const showPh=()=>{ img.style.display='none'; pt.style.display=''; hero.classList.remove('has-img'); };
   img.onload=()=>{ img.style.display=''; pt.style.display='none'; hero.classList.add('has-img'); }; img.onerror=showPh;
-  showPh(); img.src=coverOf(w);
+  showPh(); const cu=coverOf(w); img.onerror=()=>{ markMissing(cu); showPh(); }; if(!MISSING.has(cu)) img.src=cu; else img.removeAttribute('src');
   $('dDesc').innerHTML=(w.desc||[]).map(t=>`<p>${esc(t)}</p>`).join('')+(w.note?`<p class="note">${esc(w.note)}</p>`:'');
   const H=w.honors||[]; $('dHonorsWrap').style.display=H.length?'':'none';
   $('dHonors').innerHTML=H.map(([d,t])=>`<li><span>${esc(d).toUpperCase()}</span><div>${esc(t)}</div></li>`).join('');
   const caps=(w.captions||[]).slice(1);
-  $('dGallery').innerHTML=caps.map((c,i)=>`<figure class="${i===0?'full':''}"><div class="ph"><span>IMAGE ${i+1}</span><img src="${galleryOf(w,i)}" alt="${esc(c)}" loading="lazy" decoding="async" onload="this.previousElementSibling.remove()" onerror="this.remove()"></div><figcaption>${esc(c)}</figcaption></figure>`).join('');
+  $('dGallery').innerHTML=caps.map((c,i)=>`<figure class="${i===0?'full':''}"><div class="ph"><span>IMAGE ${i+1}</span>${MISSING.has(galleryOf(w,i))?'':`<img src="${galleryOf(w,i)}" alt="${esc(c)}" loading="lazy" decoding="async" onload="this.previousElementSibling.remove()" onerror="window.__miss&&window.__miss(this.getAttribute('src'));this.remove()">`}</div><figcaption>${esc(c)}</figcaption></figure>`).join('');
   $('dCredits').textContent=w.credits||''; $('dCredits').style.display=w.credits?'':'none';
   const lo=isSolo(a)?N:0, sz=isSolo(a)?WORKS.length-N:N, pv=lo+mod(a-lo-1,sz), nx=lo+mod(a-lo+1,sz);
   $('dPrev').innerHTML=`<small>← PREVIOUS</small>${esc(WORKS[pv].title)}`; $('dPrev').onclick=e=>{ e.preventDefault(); openDetail(pv); };
@@ -959,15 +965,44 @@ function fillDetail(a){ const w=WORKS[a]; curWork=a; const $=id=>document.getEle
 function openDetail(a){
   detailOpen=true; fillDetail(a); detail.classList.add('open'); detail.setAttribute('aria-hidden','false'); document.body.classList.add('detail');
   if(mode==='spiral'&&!isSolo(a)){ target=Math.round(p)+((a-mod(Math.round(p),N)+N+N/2)%N-N/2); }   // spiral turns to this work behind the page
-  try{ if(location.hash!=='#'+slug(WORKS[a])) location.hash=slug(WORKS[a]); }catch(e){}
+  setRoute('/work/'+WORKS[a].key);
 }
 function closeDetail(){ detailOpen=false; detail.classList.remove('open'); document.body.classList.remove('detail'); detail.setAttribute('aria-hidden','true'); lastInput=performance.now();
-  try{ if(location.hash.startsWith('#work-')) location.hash=''; }catch(e){} }
+  setRoute(mode==='grid'?'/'+catSlug(gridCat):mode==='about'?(document.body.classList.contains('page-news')?'/news':'/about'):'/'); }
 document.getElementById('dBack').onclick=e=>{ e.preventDefault(); closeDetail(); };
 document.querySelectorAll('.wp-nav a').forEach(a=>a.onclick=e=>{ e.preventDefault(); const g=a.dataset.go; closeDetail(); if(g!=='work') setTimeout(()=>goAbout(g),60); });
-function routeHash(){ const h=(location.hash||'').slice(1); const i=WORKS.findIndex(w=>slug(w)===h);
-  if(i>=0){ if(!detailOpen||curWork!==i) openDetail(i); } else if(detailOpen) closeDetail(); }
-addEventListener('hashchange',routeHash);
+/* ---------------- router ----------------
+   /                      the spiral
+   /about   /news         pages
+   /work/<key>            a work page (key = the work's folder name, e.g. /work/chrysalis)
+   /research, /art-projects, /independent-works, /interface, ...   category grids          */
+const catSlug=c=>(FILTER_LABEL[c]||c).toLowerCase().replace(/[^a-z0-9]+/g,'-');
+let routeQ=null, applying=false, lastPush=0;
+function curPath(){ if(USE_PATH) return location.pathname.replace(/\/index\.html$/,'/').replace(/\/+$/,'')||'/';
+  const h=(location.hash||'').slice(1); return h ? '/'+h.replace(/^work-/,'work/') : '/'; }
+function setRoute(path){ if(applying) return; routeQ=path; queueMicrotask(()=>{ const pth=routeQ; routeQ=null; if(pth==null||pth===curPath()) return;
+  const now=performance.now(), how=(now-lastPush<500)?'replaceState':'pushState'; lastPush=now;
+  try{ if(USE_PATH) history[how](null,'',pth); else history[how](null,'',pth==='/'?location.pathname+location.search:'#'+pth.slice(1).replace(/^work\//,'work-')); }catch(e){}
+  document.title=titleFor(pth); }); }
+function titleFor(pth){ const m=pth.match(/^\/work\/(.+)$/); const w=m&&WORKS.find(x=>x.key===m[1]);
+  if(w) return w.title+' \u00B7 Jintong Yang'; if(pth==='/about') return 'About \u00B7 Jintong Yang'; if(pth==='/news') return 'News \u00B7 Jintong Yang';
+  const c=FILTERS.find(f=>f&&f!=='All'&&'/'+catSlug(f)===pth); if(c) return (FILTER_LABEL[c]||c)+' \u00B7 Jintong Yang'; return 'Jintong Yang'; }
+function applyRoute(){
+  const pth=curPath(); applying=true; document.title=titleFor(pth);
+  try{
+    const m=pth.match(/^\/work\/(.+)$/), wi=m?WORKS.findIndex(w=>w.key===m[1]):-1;
+    const cat=FILTERS.find(f=>f&&f!=='All'&&'/'+catSlug(f)===pth);
+    if(pth==='/about'||pth==='/news'){ if(detailOpen) closeDetail(); goAbout(pth.slice(1)); return; }
+    if(mode==='about'){ goWork(); applying=false; if(wi>=0||cat) setTimeout(()=>{ applying=true; try{ wi>=0?openDetail(wi):toGrid(cat); } finally{ applying=false; } },2150); return; }
+    if(wi>=0){ if(!detailOpen||curWork!==wi) openDetail(wi); return; }
+    if(detailOpen) closeDetail();
+    if(cat){ if(gridCat!==cat) toGrid(cat); return; }
+    if(mode==='grid') toSpiral();
+  } finally { applying=false; }
+}
+addEventListener('popstate',applyRoute);
+if(!USE_PATH) addEventListener('hashchange',()=>{ if(!routeQ) applyRoute(); });
+const routeHash=applyRoute;
 
 /* ---------------- about: travel through time-space ---------------- */
 const evDate=d=>{ const [m,y]=d.split(' '); return new Date(`${m} 1, ${y}`); };
@@ -984,6 +1019,7 @@ const evDate=d=>{ const [m,y]=d.split(' '); return new Date(`${m} 1, ${y}`); };
 { const e=document.getElementById('lkEmail'); e.innerHTML='Email<i>\u2197</i>'; e.title=LINKS.email; e.setAttribute('aria-label','Email '+LINKS.email); e.href='mailto:'+LINKS.email;
   const ig=document.getElementById('lkIg'); const igh=LINKS.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\/?/,'').replace(/\/$/,''); ig.innerHTML='Instagram<i>\u2197</i>'; ig.title=igh?'@'+igh:'Instagram'; ig.setAttribute('aria-label','Instagram'); ig.href=LINKS.instagram; ig.target='_blank'; ig.rel='noopener';
   const li=document.getElementById('lkLi'); li.innerHTML='LinkedIn<i>\u2197</i>'; li.title='LinkedIn'; li.setAttribute('aria-label','LinkedIn'); li.href=LINKS.linkedin; li.target='_blank'; li.rel='noopener';
+  document.getElementById('cvlink').href=ROOT+'CV_Jintong_Yang.pdf';
   if(PORTRAIT){ const im=new Image(); im.alt='Jintong Yang'; im.onload=()=>{ const P=document.getElementById('portrait'); P.textContent=''; P.appendChild(im); }; im.src=PORTRAIT; } }
 let travel=null, warpAcc=0;
 const SPIRAL_CAM=()=>({ pos:new THREE.Vector3(1.0,1.6,R+16*(camera.aspect<1?1.6:1)), look:new THREE.Vector3(-.6,-.35,R-4.5) });
@@ -992,6 +1028,7 @@ function startTravel(to,dur,done,soft){ travel={ from:{pos:curPos.clone(),look:c
 function setPage(pg){ document.body.classList.toggle('page-about',pg==='about'); document.body.classList.toggle('page-news',pg==='news');
   ['Work','News','About'].forEach(k=>document.getElementById('nav'+k).classList.toggle('on',k.toLowerCase()===pg)); }
 function goAbout(pg='about'){
+  setRoute('/'+pg);
   if(mode==='about'&&!travel){ setPage(pg); return; }
   if(mode==='about'||travel) return;
   if(detailOpen) closeDetail();
@@ -1004,6 +1041,7 @@ function goWork(){
   if(detailOpen) closeDetail();
   if(mode==='grid'){ toSpiral(); return; }
   if(mode!=='about'||travel) return;
+  setRoute('/');
   document.body.classList.remove('about-ready'); setPage('work');
   setTimeout(()=>startTravel(SPIRAL_CAM(),1900,()=>{ mode='spiral'; document.body.classList.remove('about'); lastInput=performance.now(); shownKey=''; },true),120);
 }
@@ -1053,9 +1091,9 @@ function crossTo(t){
 async function setSlideWork(a){
   SLIDE.work=a; const w=WORKS[a], n=Math.max(0,(w.captions||[]).length-1);
   SLIDE.list=[assets[a].tex]; SLIDE.idx=0; crossTo(assets[a].tex);
-  const texs=await Promise.all([coverOf(w),...Array.from({length:n},(_,i)=>galleryOf(w,i))].map(loadTexP));
+  const real=[]; const c=await loadTexP(coverOf(w)); if(c) real.push(c);
+  for(let i=0;i<n;i++){ if(SLIDE.work!==a) return; const t=await loadTexP(galleryOf(w,i)); if(!t) break; real.push(t); }
   if(SLIDE.work!==a) return;
-  const real=texs.filter(Boolean);
   if(real.length){ SLIDE.list=real; SLIDE.idx=0; if(real[0]!==SLIDE.next) crossTo(real[0]); }
 }
 function updateSlide(dt,now){

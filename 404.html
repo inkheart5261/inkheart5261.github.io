@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Jintong Yang</title>
+<script>
+  // GitHub Pages serves this file for any path it doesn't have (e.g. /about, /work/chrysalis).
+  // Pages: remember the path and hand over to the main site, which reopens it.
+  // Missing files (images etc.): stop here, so nothing heavy is sent back.
+  (function () {
+    var p = location.pathname;
+    if (/\.[a-z0-9]{2,5}$/i.test(p)) return;
+    try { sessionStorage.setItem('spa-path', p + location.search + location.hash); } catch (e) {}
+    location.replace('/');
+  })();
+</script>
+</head>
+<body style="background:#000"></body>
+</html>
